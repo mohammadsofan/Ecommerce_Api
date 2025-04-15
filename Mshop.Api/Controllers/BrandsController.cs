@@ -1,24 +1,24 @@
 ﻿using Mapster;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Mshop.Api.Data.models;
 using Mshop.Api.DTOs.Request;
+using Mshop.Api.DTOs.Requests;
 using Mshop.Api.DTOs.ResponseDTOs;
+using Mshop.Api.DTOs.Responses;
 using Mshop.Api.Services;
 
 namespace Mshop.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-    public class CategoriesController : ControllerBase
+    public class BrandsController : ControllerBase
     {
-        private readonly ICategoryService categoryService;
+        private readonly IBrandService brandService;
 
-        public CategoriesController(ICategoryService categoryService)
+        public BrandsController(IBrandService brandService)
         {
-            this.categoryService = categoryService;
+            this.brandService = brandService;
         }
 
         [HttpGet("")]
@@ -26,8 +26,9 @@ namespace Mshop.Api.Controllers
         {
             try
             {
-                return Ok(categoryService.GetAll().Adapt<IEnumerable<CategoryResponse>>());
-            }catch(Exception ex)
+                return Ok(brandService.GetAll().Adapt<IEnumerable<BrandResponse>>());
+            }
+            catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
@@ -37,7 +38,7 @@ namespace Mshop.Api.Controllers
         {
             try
             {
-                return Ok(categoryService.Get(c => c.Id == id).Adapt<CategoryResponse>());
+                return Ok(brandService.Get(c => c.Id == id).Adapt<BrandResponse>());
             }
             catch (Exception ex)
             {
@@ -45,12 +46,12 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpPost("")]
-        public IActionResult Create([FromBody] CategoryRequest categoryRequest)
+        public IActionResult Create([FromBody] BrandRequest brandRequest)
         {
             try
             {
-                var categoryInDB = categoryService.Add(categoryRequest.Adapt<Category>());
-                return CreatedAtAction(nameof(GetById), new { id = categoryInDB.Id }, categoryInDB);
+                var brandInDB = brandService.Add(brandRequest.Adapt<Brand>());
+                return CreatedAtAction(nameof(GetById), new { id = brandInDB.Id }, brandInDB);
             }
             catch (Exception ex)
             {
@@ -62,7 +63,7 @@ namespace Mshop.Api.Controllers
         {
             try
             {
-                var result = categoryService.Delete(id);
+                var result = brandService.Delete(id);
                 if (result == false)
                 {
                     return NotFound();
@@ -75,11 +76,11 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpPut("{id}")]
-        public IActionResult Update([FromRoute] Guid id,[FromBody] CategoryRequest categoryRequest)
+        public IActionResult Update([FromRoute] Guid id, [FromBody] BrandRequest brandRequest)
         {
             try
             {
-                var result = categoryService.Edit(id, categoryRequest.Adapt<Category>());
+                var result = brandService.Edit(id, brandRequest.Adapt<Brand>());
                 if (result == false) return NotFound();
                 return NoContent();
             }

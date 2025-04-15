@@ -42,7 +42,6 @@ namespace Mshop.Api.Services
 
         public IEnumerable<Category> GetAll()
         {
-            context.Categories.FirstOrDefault(e => e.Name=="");
             return context.Categories.ToList();
         }
 

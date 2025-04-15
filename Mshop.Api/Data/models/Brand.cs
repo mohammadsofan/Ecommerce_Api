@@ -1,6 +1,6 @@
 ﻿namespace Mshop.Api.Data.models
 {
-    public class Category
+    public class Brand
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
