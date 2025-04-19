@@ -1,6 +1,8 @@
-﻿namespace Mshop.Api.Data.models
+﻿using Mshop.Api.Data.Interfaces;
+
+namespace Mshop.Api.Data.models
 {
-    public class Product
+    public class Product : IEntity
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;

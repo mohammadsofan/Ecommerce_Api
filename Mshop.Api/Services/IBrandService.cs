@@ -1,14 +1,11 @@
 ﻿using Mshop.Api.Data.models;
+using Mshop.Api.Services.IService;
 using System.Linq.Expressions;
 
 namespace Mshop.Api.Services
 {
-    public interface IBrandService
+    public interface IBrandService:IService<Brand>
     {
-        IEnumerable<Brand> GetAll();
-        Brand? Get(Expression<Func<Brand, bool>> expression);
-        Brand Add(Brand brand);
-        bool Delete(Guid id);
-        bool Edit(Guid id, Brand brand);
+
     }
 }

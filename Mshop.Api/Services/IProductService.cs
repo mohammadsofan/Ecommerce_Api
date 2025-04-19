@@ -5,10 +5,12 @@ namespace Mshop.Api.Services
 {
     public interface IProductService
     {
-        IEnumerable<Product> GetAll(string? query, int page = 1, int limit= 10);
-        Product? Get(Expression<Func<Product, bool>> expression);
-        Product Add(Product product,IFormFile image);
-        bool Delete(Guid id);
-        bool Edit(Guid id, Product product, IFormFile? image);
+        Task<IEnumerable<Product>> GetAsync(string? query, int page = 1, int limit = 10, bool isTrackable = true, params Expression<Func<Product, object>>[] includes);
+        Task<Product?> GetOneAsync(Expression<Func<Product, bool>> expression, bool isTrackable = true, params Expression<Func<Product, object>>[] includes);
+        Task<Product> AddAsync(Product product,IFormFile image,CancellationToken cancellationToken = default);
+        Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+        Task<bool> EditAsync(Guid id, Product product, IFormFile? image, CancellationToken cancellationToken = default);
+        Task<bool> ToggleStatusAsync(Guid id, CancellationToken cancellationToken = default);
+
     }
 }

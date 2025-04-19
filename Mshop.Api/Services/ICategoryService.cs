@@ -1,14 +1,10 @@
 ﻿using Mshop.Api.Data.models;
+using Mshop.Api.Services.IService;
 using System.Linq.Expressions;
 
 namespace Mshop.Api.Services
 {
-    public interface ICategoryService
+    public interface ICategoryService:IService<Category>
     {
-        IEnumerable<Category> GetAll();
-        Category? Get(Expression<Func<Category, bool>> expression);
-        Category Add(Category category);
-        bool Delete(Guid id);
-        bool Edit(Guid id,Category category);
     }
 }

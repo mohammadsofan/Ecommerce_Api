@@ -7,6 +7,7 @@ using Mshop.Api.DTOs.Requests;
 using Mshop.Api.DTOs.Responses;
 using Mshop.Api.Services;
 using System;
+using System.Threading.Tasks;
 
 namespace Mshop.Api.Controllers
 {
@@ -23,10 +24,10 @@ namespace Mshop.Api.Controllers
             this.productService = productService;
         }
         [HttpGet("")]
-        public IActionResult GetAll([FromQuery] string? query, [FromQuery] int page=1, [FromQuery] int limit = 10)
+        public async Task<IActionResult> GetAll([FromQuery] string? query, [FromQuery] int page=1, [FromQuery] int limit = 10)
         {
             try {
-                var products = productService.GetAll(query, page,limit);
+                var products = await productService.GetAsync(query, page,limit,false);
                 if(products is null)
                 {
                     return NotFound();
@@ -40,11 +41,11 @@ namespace Mshop.Api.Controllers
 
         }
         [HttpGet("{id}")]
-        public IActionResult GetById([FromRoute] Guid id)
+        public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             try
             {
-                var product = productService.Get(p=>p.Id==id);
+                var product = await productService.GetOneAsync(p=>p.Id==id,false);
                 if (product is null)
                 {
                     return NotFound();
@@ -57,11 +58,11 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpPost("")]
-        public IActionResult Create([FromForm] ProductRequest productRequest)
+        public async Task<IActionResult> Create([FromForm] ProductRequest productRequest, CancellationToken cancellationToken = default)
         {
             try
             {
-                var product = productService.Add(productRequest.Adapt<Product>(), productRequest.MainImage);
+                var product = await productService.AddAsync(productRequest.Adapt<Product>(), productRequest.MainImage, cancellationToken);
                 return CreatedAtAction(nameof(GetById), new { product.Id }, product.Adapt<ProductResponse>());
             }
             catch (InvalidDataException ex)
@@ -74,11 +75,11 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpDelete("{id}")]
-        public IActionResult Delete([FromRoute] Guid id)
+        public async Task<IActionResult> Delete([FromRoute] Guid id,CancellationToken cancellationToken = default)
         {
             try
             {
-                var result = productService.Delete(id);
+                var result = await productService.DeleteAsync(id, cancellationToken);
                 if (!result)
                 {
                     return NotFound();
@@ -91,11 +92,11 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpPut("{id}")]
-        public IActionResult Update([FromRoute] Guid id, [FromForm] ProductUpdateRequest productRequest)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] ProductUpdateRequest productRequest,CancellationToken cancellationToken = default)
         {
             try
             {
-                var result = productService.Edit(id, productRequest.Adapt<Product>(), productRequest.MainImage);
+                var result = await productService.EditAsync(id, productRequest.Adapt<Product>(), productRequest.MainImage,cancellationToken);
                 if (!result)
                 {
                     return NotFound();
@@ -110,6 +111,16 @@ namespace Mshop.Api.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+        }
+        [HttpPost("toggleStatus/{id}")]
+        public async Task<IActionResult> ToggleStatus([FromRoute] Guid id, CancellationToken cancellationToken = default)
+        {
+            var result = await productService.ToggleStatusAsync(id, cancellationToken);
+            if (result == false)
+            {
+                return NotFound();
+            }
+            return NoContent();
         }
     }
 }

@@ -6,12 +6,13 @@ using Mshop.Api.Data.models;
 using Mshop.Api.DTOs.Request;
 using Mshop.Api.DTOs.ResponseDTOs;
 using Mshop.Api.Services;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mshop.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryService categoryService;
@@ -22,22 +23,28 @@ namespace Mshop.Api.Controllers
         }
 
         [HttpGet("")]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
             try
             {
-                return Ok(categoryService.GetAll().Adapt<IEnumerable<CategoryResponse>>());
+                var categoies = await categoryService.GetAsync();
+                return Ok(categoies.Adapt<IEnumerable<CategoryResponse>>());
+
             }catch(Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
         [HttpGet("{id}")]
-        public IActionResult GetById([FromRoute] Guid id)
+        public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             try
             {
-                return Ok(categoryService.Get(c => c.Id == id).Adapt<CategoryResponse>());
+                var category = await categoryService.GetOneAsync(c => c.Id == id);
+                if (category == null) { 
+                    return NotFound();
+                }
+                return Ok(category.Adapt<CategoryResponse>());
             }
             catch (Exception ex)
             {
@@ -45,12 +52,12 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpPost("")]
-        public IActionResult Create([FromBody] CategoryRequest categoryRequest)
+        public async Task<IActionResult> Create([FromBody] CategoryRequest categoryRequest, CancellationToken cancellationToken = default)
         {
             try
             {
-                var categoryInDB = categoryService.Add(categoryRequest.Adapt<Category>());
-                return CreatedAtAction(nameof(GetById), new { id = categoryInDB.Id }, categoryInDB);
+                var categoryInDB = await categoryService.AddAsync(categoryRequest.Adapt<Category>(), cancellationToken);
+                return CreatedAtAction(nameof(GetById), new { id = categoryInDB.Id }, categoryInDB.Adapt<CategoryResponse>());
             }
             catch (Exception ex)
             {
@@ -58,11 +65,11 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpDelete("{id}")]
-        public IActionResult Delete([FromRoute] Guid id)
+        public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken = default)
         {
             try
             {
-                var result = categoryService.Delete(id);
+                var result = await categoryService.DeleteAsync(id);
                 if (result == false)
                 {
                     return NotFound();
@@ -75,18 +82,32 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpPut("{id}")]
-        public IActionResult Update([FromRoute] Guid id,[FromBody] CategoryRequest categoryRequest)
+        public async Task<IActionResult> Update([FromRoute] Guid id,[FromBody] CategoryRequest categoryRequest, CancellationToken cancellationToken = default)
         {
             try
             {
-                var result = categoryService.Edit(id, categoryRequest.Adapt<Category>());
-                if (result == false) return NotFound();
+                var result = await categoryService.EditAsync(id, categoryRequest.Adapt<Category>(),cancellationToken);
+                if (result == false) 
+                {
+                    return NotFound(); 
+                }
                 return NoContent();
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+        }
+
+        [HttpPost("toggleStatus/{id}")]
+        public async Task<IActionResult> ToggleStatus([FromRoute] Guid id, CancellationToken cancellationToken = default)
+        {
+            var result = await categoryService.ToggleStatusAsync(id,cancellationToken);
+            if(result == false)
+            {
+                return NotFound();
+            }
+            return NoContent();
         }
     }
 }

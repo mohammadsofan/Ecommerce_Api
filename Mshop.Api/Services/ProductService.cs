@@ -3,6 +3,7 @@ using Mshop.Api.Data;
 using Mshop.Api.Data.models;
 using Mshop.Api.DTOs.Requests;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace Mshop.Api.Services
 {
@@ -15,7 +16,7 @@ namespace Mshop.Api.Services
             this.context = context;
         }
 
-        public Product Add(Product product, IFormFile file)
+        public async Task<Product> AddAsync(Product product, IFormFile file,CancellationToken cancellationToken = default)
         {
             if (file is null || file.Length <= 0)
             {
@@ -32,16 +33,16 @@ namespace Mshop.Api.Services
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Images", fileName);
             using (var stream = System.IO.File.Create(filePath))
             {
-                file.CopyTo(stream);
+                await file.CopyToAsync(stream);
             }
             product.MainImage = fileName;
             product.Id = Guid.NewGuid();
-            context.Products.Add(product);
-            context.SaveChanges();
+            await context.Products.AddAsync(product, cancellationToken);
+            await context.SaveChangesAsync();
             return product;
         }
 
-        public bool Delete(Guid id)
+        public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var product = context.Products.Find(id);
             if (product is null)
@@ -54,11 +55,11 @@ namespace Mshop.Api.Services
                 System.IO.File.Delete(filePath);
             }
             context.Products.Remove(product);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
             return true;
         }
 
-        public bool Edit(Guid id, Product product,IFormFile? file)
+        public async Task<bool> EditAsync(Guid id, Product product,IFormFile? file, CancellationToken cancellationToken = default)
         {
             var productInDb = context.Products.AsNoTracking().FirstOrDefault(p => p.Id == id);
             if (productInDb is null)
@@ -73,9 +74,8 @@ namespace Mshop.Api.Services
                 if (!allowedExtensions.Contains(extension))
                 {
                     throw new InvalidDataException("Invalid File Format");
-
                 }
-                var currentPath = Path.Combine(Directory.GetCurrentDirectory(), "Images", product.MainImage);
+                var currentPath = Path.Combine(Directory.GetCurrentDirectory(), "Images", productInDb.MainImage);
                 if (System.IO.File.Exists(currentPath))
                 {
                     System.IO.File.Delete(currentPath);
@@ -84,7 +84,7 @@ namespace Mshop.Api.Services
                 var newPath = Path.Combine(Directory.GetCurrentDirectory(), "Images", fileName);
                 using (var stream = System.IO.File.Create(newPath))
                 {
-                    file.CopyTo(stream);
+                   await file.CopyToAsync(stream);
                 }
                 product.MainImage = fileName;
             }
@@ -94,26 +94,58 @@ namespace Mshop.Api.Services
             }
             product.Id = productInDb.Id;
             context.Products.Update(product);
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
             return true;
         }
 
-        public Product? Get(Expression<Func<Product, bool>> expression)
+        public async Task<Product?> GetOneAsync(Expression<Func<Product, bool>> expression,bool isTrackable = true ,params Expression<Func<Product, object>>[] includes)
         {
-            return context.Products.FirstOrDefault(expression);
+            IQueryable<Product> query = context.Products;
+            if (!isTrackable)
+            {
+                query = query.AsNoTracking();
+            }
+            if (includes.Length > 0) {
+                foreach (var include in includes) { 
+                    query = query.Include(include);
+                }
+            }
+            return await query.FirstOrDefaultAsync(expression);
         }
 
-        public IEnumerable<Product> GetAll(string? query, int page = 1, int limit=10)
+        public async Task<IEnumerable<Product>> GetAsync(string? query, int page = 1, int limit=10, bool isTrackable = true, params Expression<Func<Product, object>>[] includes)
         {
             if (limit <= 0) limit = 10;
             if (page <= 0) page = 1;
             IQueryable<Product> products = context.Products;
+            if (!isTrackable)
+            {
+                products = products.AsNoTracking();
+            }
+            if (includes.Length > 0)
+            {
+                foreach (var include in includes)
+                {
+                    products = products.Include(include);
+                }
+            }
             if (!string.IsNullOrEmpty(query))
             {
                 products = products.Where(p => (p.Name.Contains(query) || p.Description.Contains(query)));
             }
 
-            return products.Skip((page-1) * limit).Take(limit).ToList();
+            return await products.Skip((page-1) * limit).Take(limit).ToListAsync();
+        }
+        public async Task<bool> ToggleStatusAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var product = await context.Products.FindAsync(id);
+            if (product is null)
+            {
+                return false;
+            }
+            product.Status = !product.Status;
+            await context.SaveChangesAsync(cancellationToken);
+            return true;
         }
     }
 }

@@ -7,6 +7,7 @@ using Mshop.Api.DTOs.Requests;
 using Mshop.Api.DTOs.ResponseDTOs;
 using Mshop.Api.DTOs.Responses;
 using Mshop.Api.Services;
+using System.Threading.Tasks;
 
 namespace Mshop.Api.Controllers
 {
@@ -22,11 +23,12 @@ namespace Mshop.Api.Controllers
         }
 
         [HttpGet("")]
-        public IActionResult GetAll()
+        public async Task<IActionResult> GetAll()
         {
             try
             {
-                return Ok(brandService.GetAll().Adapt<IEnumerable<BrandResponse>>());
+                var brands = await brandService.GetAsync(null,false);
+                return Ok(brands.Adapt<IEnumerable<BrandResponse>>());
             }
             catch (Exception ex)
             {
@@ -34,11 +36,12 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpGet("{id}")]
-        public IActionResult GetById([FromRoute] Guid id)
+        public async Task<IActionResult> GetById([FromRoute] Guid id)
         {
             try
             {
-                return Ok(brandService.Get(c => c.Id == id).Adapt<BrandResponse>());
+                var brand = await brandService.GetOneAsync(c => c.Id == id,false);
+                return Ok(brand.Adapt<BrandResponse>());
             }
             catch (Exception ex)
             {
@@ -46,12 +49,12 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpPost("")]
-        public IActionResult Create([FromBody] BrandRequest brandRequest)
+        public async Task<IActionResult> Create([FromBody] BrandRequest brandRequest,CancellationToken cancellationToken = default)
         {
             try
             {
-                var brandInDB = brandService.Add(brandRequest.Adapt<Brand>());
-                return CreatedAtAction(nameof(GetById), new { id = brandInDB.Id }, brandInDB);
+                var brandInDB = await brandService.AddAsync(brandRequest.Adapt<Brand>(), cancellationToken);
+                return CreatedAtAction(nameof(GetById), new { id = brandInDB.Id }, brandInDB.Adapt<BrandResponse>());
             }
             catch (Exception ex)
             {
@@ -59,11 +62,11 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpDelete("{id}")]
-        public IActionResult Delete([FromRoute] Guid id)
+        public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken = default)
         {
             try
             {
-                var result = brandService.Delete(id);
+                var result = await brandService.DeleteAsync(id, cancellationToken);
                 if (result == false)
                 {
                     return NotFound();
@@ -76,11 +79,11 @@ namespace Mshop.Api.Controllers
             }
         }
         [HttpPut("{id}")]
-        public IActionResult Update([FromRoute] Guid id, [FromBody] BrandRequest brandRequest)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] BrandRequest brandRequest, CancellationToken cancellationToken = default)
         {
             try
             {
-                var result = brandService.Edit(id, brandRequest.Adapt<Brand>());
+                var result = await brandService.EditAsync(id, brandRequest.Adapt<Brand>(), cancellationToken);
                 if (result == false) return NotFound();
                 return NoContent();
             }
@@ -88,6 +91,16 @@ namespace Mshop.Api.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
+        }
+        [HttpPost("toggleStatus/{id}")]
+        public async Task<IActionResult> ToggleStatus([FromRoute] Guid id, CancellationToken cancellationToken = default)
+        {
+            var result = await brandService.ToggleStatusAsync(id,cancellationToken);
+            if (result == false)
+            {
+                return NotFound();
+            }
+            return NoContent();
         }
     }
 }
