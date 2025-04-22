@@ -69,18 +69,9 @@ namespace Mshop.Api.Services.IService
         public async Task<T?> GetOneAsync(Expression<Func<T, bool>>? expression=null, bool isTrackable = true, params Expression<Func<T, object>>[] includes)
         {
             var all=await GetAsync(expression, isTrackable,includes);
+            Console.WriteLine(all);
             return all.FirstOrDefault();
         }
-        public async Task<bool> ToggleStatusAsync(Guid id, CancellationToken cancellationToken = default)
-        {
-            var entity = await _dbset.FindAsync(id);
-            if (entity is null)
-            {
-                return false;
-            }
-            entity.Status = !entity.Status;
-            await _context.SaveChangesAsync(cancellationToken);
-            return true;
-        }
+
     }
 }

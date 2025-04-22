@@ -2,12 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Mshop.Api.Data;
 using Mshop.Api.Data.models;
-using Mshop.Api.Services.IService;
-using System.Linq.Expressions;
+using Mshop.Api.Services.IStatusService;
 
 namespace Mshop.Api.Services
 {
-    public class CategoryService : Service<Category>,ICategoryService
+    public class CategoryService : StatusService<Category>,ICategoryService
     {
         private readonly ApplicationDbContext context;
 

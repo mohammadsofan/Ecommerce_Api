@@ -2,7 +2,7 @@
 
 namespace Mshop.Api.Data.models
 {
-    public class Product : IEntity
+    public class Product : IEntityStatus
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;

@@ -12,7 +12,6 @@ namespace Mshop.Api.Services.IService
         Task<T> AddAsync(T entity,CancellationToken cancellationToken = default);
         Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
         Task<bool> EditAsync(Guid id, T entity, CancellationToken cancellationToken = default);
-        Task<bool> ToggleStatusAsync(Guid id, CancellationToken cancellationToken = default);
 
     }
 }

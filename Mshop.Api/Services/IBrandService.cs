@@ -1,10 +1,9 @@
 ﻿using Mshop.Api.Data.models;
-using Mshop.Api.Services.IService;
-using System.Linq.Expressions;
+using Mshop.Api.Services.IStatusService;
 
 namespace Mshop.Api.Services
 {
-    public interface IBrandService:IService<Brand>
+    public interface IBrandService:IStatusService<Brand>
     {
 
     }
