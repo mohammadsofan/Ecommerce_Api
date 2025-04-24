@@ -6,5 +6,7 @@ namespace Mshop.Api.Services
     public interface ICartService:IService<Cart>
     {
         Task<bool> CheckExists(Guid productId, Guid userId);
+        Task<bool> DeleteAsync(Guid userId, Guid productId, CancellationToken cancellationToken = default);
+
     }
 }

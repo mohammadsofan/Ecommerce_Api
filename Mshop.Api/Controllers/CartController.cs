@@ -46,8 +46,33 @@ namespace Mshop.Api.Controllers
             }
         }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> RemoveFromCart([FromRoute] Guid id,CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (Guid.TryParse(userManager.GetUserId(User), out Guid userId))
+                {
+                    var cart = await cartService.GetOneAsync(c=>c.ApplicationUserId== userId && c.ProductId==id,false);
+                    if(cart is null)
+                    {
+                        return NotFound();
+                    }
+                    var result = await cartService.DeleteAsync(userId,id, cancellationToken);
+                    return NoContent();
+                }
+
+                return Unauthorized();
+
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
+        }
         [HttpPost("")]
-        public async Task<IActionResult> AddToCart([FromBody] CartRequest cartRequest)
+        public async Task<IActionResult> AddToCart([FromBody] CartRequest cartRequest,CancellationToken cancellationToken = default)
         {
             try
             {
@@ -59,8 +84,8 @@ namespace Mshop.Api.Controllers
                     }
                     var cart = cartRequest.Adapt<Cart>();
                     cart.ApplicationUserId = id;
-                    cart = await cartService.AddAsync(cart);
-                    return Ok(cart);
+                    cart = await cartService.AddAsync(cart, cancellationToken);
+                    return Created();
                 }
 
                 return Unauthorized();
