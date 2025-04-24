@@ -99,7 +99,7 @@ namespace Mshop.Api.Controllers
             }
         }
 
-        [HttpPost("toggleStatus/{id}")]
+        [HttpPatch("toggleStatus/{id}")]
         public async Task<IActionResult> ToggleStatus([FromRoute] Guid id, CancellationToken cancellationToken = default)
         {
             var result = await categoryService.ToggleStatusAsync(id,cancellationToken);

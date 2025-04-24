@@ -7,6 +7,7 @@ namespace Mshop.Api.Services
     {
         Task<bool> CheckExists(Guid productId, Guid userId);
         Task<bool> DeleteAsync(Guid userId, Guid productId, CancellationToken cancellationToken = default);
+        Task<bool> EditQuantityAsync(Guid userId, Guid productId, int newQuantity, CancellationToken cancellationToken = default);
 
     }
 }

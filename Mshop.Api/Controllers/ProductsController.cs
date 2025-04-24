@@ -112,7 +112,7 @@ namespace Mshop.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
-        [HttpPost("toggleStatus/{id}")]
+        [HttpPatch("toggleStatus/{id}")]
         public async Task<IActionResult> ToggleStatus([FromRoute] Guid id, CancellationToken cancellationToken = default)
         {
             var result = await productService.ToggleStatusAsync(id, cancellationToken);

@@ -27,5 +27,15 @@ namespace Mshop.Api.Services
             await _context.SaveChangesAsync(cancellationToken);
             return true;
         }
+
+        public async Task<bool> EditQuantityAsync(Guid userId, Guid productId,int newQuantity, CancellationToken cancellationToken = default)
+        {
+            var entity = await _context.Carts.FindAsync(productId, userId);
+            if (entity is null)
+                return false;
+            entity.Quantity = newQuantity;
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
     }
 }

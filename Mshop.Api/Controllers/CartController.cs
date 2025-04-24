@@ -53,12 +53,8 @@ namespace Mshop.Api.Controllers
             {
                 if (Guid.TryParse(userManager.GetUserId(User), out Guid userId))
                 {
-                    var cart = await cartService.GetOneAsync(c=>c.ApplicationUserId== userId && c.ProductId==id,false);
-                    if(cart is null)
-                    {
-                        return NotFound();
-                    }
                     var result = await cartService.DeleteAsync(userId,id, cancellationToken);
+                    if(!result) return NotFound();
                     return NoContent();
                 }
 
@@ -94,6 +90,28 @@ namespace Mshop.Api.Controllers
 
             catch (Exception ex) {
                 return StatusCode(StatusCodes.Status500InternalServerError,ex.Message);
+            }
+        }
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> UpdateQuantity([FromRoute] Guid id,[FromBody] int quantity,CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (Guid.TryParse(userManager.GetUserId(User), out Guid userId))
+                {
+
+                    var result = await cartService.EditQuantityAsync(userId, id, quantity, cancellationToken);
+                    if (!result) return NotFound();
+                    return NoContent();
+                }
+
+                return Unauthorized();
+
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
             }
         }
     }
