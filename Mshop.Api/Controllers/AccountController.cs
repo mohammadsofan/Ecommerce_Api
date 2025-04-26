@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Mshop.Api.Data.models;
 using Mshop.Api.DTOs.Requests;
 
@@ -14,11 +16,18 @@ namespace Mshop.Api.Controllers
     {
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
+        private readonly RoleManager<IdentityRole> roleManager;
+        private readonly IEmailSender emailSender;
 
-        public AccountController(UserManager<ApplicationUser> userManager,SignInManager<ApplicationUser>  signInManager)
+        public AccountController(UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser>  signInManager,
+            RoleManager<IdentityRole> roleManager
+            ,IEmailSender emailSender)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
+            this.roleManager = roleManager;
+            this.emailSender = emailSender;
         }
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest registerRequest)
@@ -29,6 +38,15 @@ namespace Mshop.Api.Controllers
                 var result = await userManager.CreateAsync(applicationUser, registerRequest.Password);
                 if (result.Succeeded)
                 {
+                    await emailSender.SendEmailAsync(applicationUser.Email!, "Welcome to MShop!", $@"
+                        <h2>Welcome to MShop, {applicationUser.FirstName} {applicationUser.LastName}!</h2>
+                        <p>We're excited to have you on board.</p>
+                        <p>Your account has been successfully created. You can now log in and start shopping!</p>
+                        <p>If you have any questions, feel free to reach out to us at <a href='mailto:support@mshop.com'>support@mshop.com</a>.</p>
+                        <br/>
+                        <p>Happy Shopping!<br/>The MShop Team</p>
+                        "
+                        );
                     await signInManager.SignInAsync(applicationUser,false);
                     return NoContent();
                 }
